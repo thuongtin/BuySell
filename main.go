@@ -68,19 +68,7 @@ func main() {
 			panic(err)
 		}
 
-		for i:=first; i<=now; i+=seconds*100 {
-			result[name][i] = Vol{0,0}
-			for _, item := range resp {
-				if item.Time == i {
-					result[name][i] = Vol{item.BuyVol, item.SellVol}
-					break
-				}
-			}
-		}
+		fmt.Printf("#%v\n", resp)
 	}
 
-	for pair, item := range result {
-		fmt.Println(pair)
-		fmt.Printf("%#v\n\n", item[_now])
-	}
 }
