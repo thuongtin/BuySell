@@ -12,10 +12,22 @@ type Person struct {
 	Phone string
 }
 type m bson.M
+type Vol struct {
+	Buy, Sell float64
+}
+
+type r struct {
+	Time int64 `bson:"_id"`
+	BuyVol float64 `bson:"buyVol"`
+	SellVol float64 `bson:"sellVol"`
+}
+
 func main() {
-	now := time.Now().UTC().Unix()
-	fmt.Println(now - (now%300))
-	panic("")
+	result := make(map[string]map[int64]Vol)
+	seconds := int64(300)
+	now := time.Now().UTC().Unix()*1000
+	_now := now - (now%(seconds*1000))
+	first := _now - (seconds*1000 * 24)
 	session, err := mgo.Dial("localhost")
 	if err != nil {
 		panic(err)
@@ -25,6 +37,7 @@ func main() {
 	session.SetMode(mgo.Monotonic, true)
 	names, _ := session.DB("bittrex").CollectionNames()
 	for _, name := range names {
+		result[name] = make(map[int64]Vol)
 		c := session.DB("bittrex").C(name)
 		pipeline := []m{
 			{
@@ -32,7 +45,7 @@ func main() {
 					"_id": m{
 						"$subtract": []m{
 							{ "$subtract": []interface{}{"$t", time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)}},
-							{"$mod":[]interface{}{m{"$subtract":[]interface{}{"$t", time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)}},1000*60*5}}},
+							{"$mod":[]interface{}{m{"$subtract":[]interface{}{"$t", time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)}},1000*60*seconds}}},
 
 					},
 					"sellVol": m{ "$sum": "$s" },
@@ -40,18 +53,34 @@ func main() {
 				},
 			},
 			{
+				"$match": m{"_id":m{"$gte":first}},
+			},
+			{
 				"$sort": m{"_id": -1},
 			},
 		}
-
+//
 		pipe := c.Pipe(pipeline)
-		resp := []bson.M{}
+		resp := []r{}
 		err := pipe.All(&resp)
 		if err != nil {
 			//handle error
+			panic(err)
 		}
-		fmt.Println(name)
-		fmt.Printf("%#v", resp) // simple print proving it's working
-		fmt.Println("\n\n\n")
+
+		for i:=first; i<=now; i+=seconds {
+			result[name][i] = Vol{0,0}
+			for _, item := range resp {
+				if item.Time/1000 == i {
+					result[name][i] = Vol{item.BuyVol, item.SellVol}
+					break
+				}
+			}
+		}
+	}
+
+	for pair, item := range result {
+		fmt.Println(pair)
+		fmt.Printf("%#v\n\n", item[_now])
 	}
 }
