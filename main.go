@@ -24,7 +24,7 @@ type r struct {
 
 func main() {
 	result := make(map[string]map[int64]Vol)
-	seconds := int64(1800)
+	seconds := int64(300)
 	now := time.Now().UTC().Unix()*1000
 	_now := now - (now%(seconds*1000))
 	first := _now - (seconds*1000 * 24)
