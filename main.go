@@ -68,7 +68,7 @@ func main() {
 			panic(err)
 		}
 
-		fmt.Printf("#%v\n", resp)
+		fmt.Printf("%s- #%v\n", name, resp)
 	}
 
 }
