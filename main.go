@@ -68,10 +68,10 @@ func main() {
 			panic(err)
 		}
 
-		for i:=first; i<=now; i+=seconds {
+		for i:=first; i<=now; i+=seconds*100 {
 			result[name][i] = Vol{0,0}
 			for _, item := range resp {
-				if item.Time/1000 == i {
+				if item.Time == i {
 					result[name][i] = Vol{item.BuyVol, item.SellVol}
 					break
 				}
