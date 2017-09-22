@@ -45,7 +45,7 @@ func main() {
 					"_id": m{
 						"$subtract": []m{
 							{ "$subtract": []interface{}{"$t", time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)}},
-							{"$mod":[]interface{}{m{"$subtract":[]interface{}{"$t", time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)}},1000*60*seconds}}},
+							{"$mod":[]interface{}{m{"$subtract":[]interface{}{"$t", time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)}},1000*seconds}}},
 
 					},
 					"sellVol": m{ "$sum": "$s" },
@@ -68,7 +68,19 @@ func main() {
 			panic(err)
 		}
 
-		fmt.Printf("%s- %#v\n", name, resp)
+		for i:=first; i<=now; i+=seconds*100 {
+			result[name][i] = Vol{0,0}
+			for _, item := range resp {
+				if item.Time == i {
+					result[name][i] = Vol{item.BuyVol, item.SellVol}
+					break
+				}
+			}
+		}
 	}
 
+	for pair, item := range result {
+		fmt.Println(pair)
+		fmt.Printf("%#v\n\n", item[_now])
+	}
 }
